@@ -22,7 +22,7 @@ app.get("/api/tokens", async (req, res) => {
         const response = await axios.get(url);
         const tokens = response.data.pairs;
 
-    constFilteredTokens = tokens.filter((token) => {
+    const FilteredTokens = tokens.filter((token) => {
         const liquidity = parseFloat(token.liquidity?.usd || 0);
         const volume = parseFloat(token.volume?.h24 || 0);
         const marketCap = parseFloat(token.fdv || 0);
@@ -42,7 +42,7 @@ app.get("/api/tokens", async (req, res) => {
 
     const RankedTokes = FilteredTokens.sort((a, b) => {
         const ScoreA = calculateScore(a);
-        const ScoreB= = calculateScore(b);
+        const ScoreB = calculateScore(b);
         return ScoreB - ScoreA;
     });
 
@@ -52,3 +52,20 @@ app.get("/api/tokens", async (req, res) => {
         res.status(500).json({error: "Failed to fetch tokens"}); 
     }
 });
+
+function calculateScore(token) {
+    let score = 0;
+    const liquidity = parseFloat(token.liquidity?.usd || 0);
+    const volume = parseFloat(token.volume?.h24 || 0);
+    const marketCap = parseFloat(token.fdv || 0)
+    const holders = parseInt(token.holders || 0)
+    const priceChange = parseFloat(token.priceChange?.h24 || 0);
+
+    if (liquidity > 50000) score += 1;
+    if (volume > 100000) score += 1;
+    if (marketCap > 100000 && marketCap < 1000000) score += 1;
+    if (holders > 100) score += 1;
+    if (priceChange > 20 && priceChange < 50) score += 1;
+    
+    return score;
+}
